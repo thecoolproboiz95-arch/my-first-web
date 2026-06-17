@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Prevents double-tap zooming and accidental text highlights on mobile phones */
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #000000; /* Sleek OLED black backdrop */
+            padding: 16px;
+        }
+
+        .calculator {
+            background-color: #1c1c1e; /* Dark system container color */
+            padding: 24px;
+            border-radius: 32px; /* Smooth rounded mobile aesthetic */
+            width: 100%;
+            max-width: 360px; /* Perfect hand size constraint */
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        #display {
+            width: 100%;
+            height: 90px;
+            background-color: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 2.8rem; /* Large text for easy viewing */
+            font-weight: 300;
+            text-align: right;
+            padding: 0 8px;
+            outline: none;
+            pointer-events: none; /* Block mobile keyboards from snapping up */
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px; /* Roomy gap so fingers don't misclick */
+        }
+
+        button.calc-btn {
+            aspect-ratio: 1; /* Makes buttons perfectly circular */
+            font-size: 1.6rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 50%; /* Rounded button style */
+            cursor: pointer;
+            background-color: #3a3a3c; /* Neutral number tone */
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.05s ease, background-color 0.1s ease;
+        }
+
+        /* Tactical visual shrinking response on thumb pressure */
+        button.calc-btn:active {
+            transform: scale(0.92);
+            background-color: #48484a;
+        }
+
+        button.operator {
+            background-color: #ff9f0a; /* Command accent amber */
+            color: #ffffff;
+            font-size: 1.8rem;
+        }
+        button.operator:active {
+            background-color: #f3a63b;
+        }
+
+        button.clear {
+            background-color: #aeaeb2; /* Top system utility tone */
+            color: #000000;
+        }
+        button.clear:active {
+            background-color: #c7c7cc;
+        }
+
+        button.backspace {
+            background-color: #aeaeb2;
+            color: #000000;
+        }
+        button.backspace:active {
+            background-color: #c7c7cc;
+        }
+
+        button.equal {
+            background-color: #ff9f0a;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <!-- Main Application Display Grid -->
+        <input type="text" id="display" placeholder="0" readonly>
+
+        <!-- On-Screen Fluid Grid Layout -->
+        <div class="buttons">
+            <button class="calc-btn clear" onclick="clearDisplay()">C</button>
+            <button class="calc-btn backspace" onclick="backspace()">⌫</button>
+            <button class="calc-btn operator" onclick="appendValue('%')">%</button>
+            <button class="calc-btn operator" onclick="appendValue('/')">÷</button>
+
+            <button class="calc-btn" onclick="appendValue('7')">7</button>
+            <button class="calc-btn" onclick="appendValue('8')">8</button>
+            <button class="calc-btn" onclick="appendValue('9')">9</button>
+            <button class="calc-btn operator" onclick="appendValue('*')">×</button>
+
+            <button class="calc-btn" onclick="appendValue('4')">4</button>
+            <button class="calc-btn" onclick="appendValue('5')">5</button>
+            <button class="calc-btn" onclick="appendValue('6')">6</button>
+            <button class="calc-btn operator" onclick="appendValue('-')">−</button>
+
+            <button class="calc-btn" onclick="appendValue('1')">1</button>
+            <button class="calc-btn" onclick="appendValue('2')">2</button>
+            <button class="calc-btn" onclick="appendValue('3')">3</button>
+            <button class="calc-btn operator" onclick="appendValue('+')">+</button>
+
+            <button class="calc-btn" onclick="appendValue('0')">0</button>
+            <button class="calc-btn" onclick="appendValue('.')">•</button>
+            <button class="calc-btn equal" style="grid-column: span 2; aspect-ratio: unset; border-radius: 40px;" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+
+        function appendValue(input) {
+            if (display.value === 'Error') display.value = '';
+            display.value += input;
+        }
+
+        function clearDisplay() {
+            display.value = '';
+        }
+
+        function backspace() {
+            if (display.value === 'Error') {
+                display.value = '';
+            } else {
+                display.value = display.value.slice(0, -1);
+            }
+        }
+
+        function calculate() {
+            let expression = display.value;
+            if (!expression) return;
+            
+            try {
+                // Safely translate percentage strings
+                let parsedExpression = expression.replace(/%/g, '/100');
+                let result = eval(parsedExpression);
+                
+                if (result === undefined || isNaN(result) || !isFinite(result)) {
+                    display.value = 'Error';
+                } else {
+                    // Prevent floating numbers from flowing off the phone screen edge
+                    if (result.toString().includes('.') && result.toString().length > 8) {
+                        display.value = Number(result.toFixed(6));
+                    } else {
+                        display.value = result;
+                    }
+                }
+            } catch (error) {
+                display.value = 'Error';
+            }
+        }
+    </script>
+</body>
+</html>
